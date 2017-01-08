@@ -1,0 +1,29 @@
+{
+ "locals": [
+    {
+        "Department":"AS",
+        "Taxonomy": ["/pets/dogs","/pets/cats"],
+        "Keywords" : ["stray"]
+    },
+    {
+        "Department":"BS",
+        "Taxonomy": ["/business and industrial/construction","/law, govt and politics/legal issues","/legislation/building laws"],
+        "Keywords" : ["safety"]
+    },
+    {
+        "Department":"CAT",
+        "Taxonomy": ["/law, govt and politics/law enforcement/police"],
+        "Keywords" : ["ticket", "attorney"]
+    },
+    {
+        "Department":"PC",
+        "Taxonomy": ["/home and garden/gardening and landscaping", "/travel/tourist destinations/national parks"],
+        "Keywords" : ["stray"]
+    },
+    {
+        "Department":"OM",
+        "Taxonomy": ["/automotive and vehicles/cars"],
+        "Keywords" : ["street","streelight","road","potholes"]  
+    }
+
+]}
