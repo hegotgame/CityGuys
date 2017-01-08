@@ -1,0 +1,345 @@
+<html>
+
+<head>
+    <title></title>
+    <link rel="stylesheet" href="/css/webapp.css"></link>
+    <script type="text/javascript" src="./bower_components/mqttws/mqttws31.js"></script>
+    <script type="text/javascript" src="./bower_components/moment/moment.js"></script>
+    <script type="text/javascript" src="./bower_components/crypto-js/crypto-js.js"></script>
+    <script type="text/javascript" src="./bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="./bower_components/jquery-color/jquery.color.js"></script>
+    <script type="text/javascript" src="./bower_components/aws-sdk/dist/aws-sdk.min.js"></script>
+    <script type="text/javascript" src="./js/aws_sigv4.js"></script>
+    <script type="text/javascript" src="./js/aws_iot.js"></script>
+    <script type="text/javascript" src="./js/connectAsThing.js"></script>
+    <script type="text/javascript" src="./js/updateDom.js"></script>
+    <script type="text/javascript" src="https://online.tableau.com/javascripts/api/tableau-2.js"></script>
+    <script type="text/javascript" src="js/tableauEmbed.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!--<link rel="stylesheet" href="./css/fonts.css">-->
+    <link rel="stylesheet" href="./css/index.css"></link>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
+    
+    .mapbox-maplogo {
+        position: absolute;
+        display: block;
+        height: 20px;
+        width: 100px;
+        left: 10px;
+        bottom: 10px;
+        text-indent: -9999px;
+        z-index: 99999;
+        overflow: hidden;
+        background-image: url('/logo.png');
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: 100px 20px;
+    }
+    
+    .popup {
+        display: none;
+        position: fixed;
+        padding: 0px;
+        width: 280px;
+        left: 50%;
+        margin-left: -150px;
+        height: 180px;
+        top: 50%;
+        margin-top: -100px;
+        background: #FFF;
+        z-index: 20;
+    }
+    
+    #popup1 {
+        -webkit-box-shadow: 0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+        box-shadow: 0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+    }
+    
+    #popup2:after {
+        position: fixed;
+        content: "";
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -2;
+    }
+    
+    #popup2:before {
+        position: absolute;
+        content: "";
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: #FFF;
+        z-index: -1;
+    }
+    /* From here on, just aesthetics */
+    
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 120%;
+    }
+    
+    a,
+    a:visited {
+        text-decoration: none;
+        color: #FFF;
+        font-weight: bold;
+        display: block;
+    }
+    
+    a:hover,
+    a:active {
+        text-decoration: underline;
+    }
+    
+    .popup a,
+    .popup a:visited {
+        color: #1abc9c;
+    }
+    
+    p {
+        margin: 1em 0;
+    }
+    
+    p+p+p {
+        font-size: 60%;
+    }
+    
+    pre.ui-coordinates {
+        background: rgba(0, 0, 0, 0.5);
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        padding: 5px 10px;
+        color: #fff;
+        font-size: 11px;
+        line-height: 18px;
+        border-radius: 3px;
+        max-height: 240px;
+        overflow: auto;
+        width: 100px;
+    }
+    </style>
+</head>
+
+<body onLoad="init();" style="padding-top: 65px;" }>
+    <nav class="navbar navbar-inverse navbar-fixed-top" style="display:none;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Alexa IOT Webapp</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <div>
+                    <ul class="nav navbar-nav">
+                        <li><a href="https://console.aws.amazon.com/iot" target="_blank">
+                        AWS IOT Console
+                    </a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <!--<li><a href="#" onClick='test();' >Test</a></li>-->
+                        <li><a href="https://developer.amazon.com/blogs/post/Tx3828JHC7O9GZ9/Using-Alexa-Skills-Kit-and-AWS-IoT-to-Voice-Control-Connected-Devices" target="_blank">Lambda update IOT Thing</a></li>
+                        <li><a href="#" onClick="alert('This page is implemented as an IOT virtual Thing, called waterPump.\nDocumentation on the MQTT browser client implementation coming soon.\nSee included Javascript.');">IOT MQTT virtual Thing</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid" style="display:none;">
+        <div id="attributes" class="col-sm-3">
+            <div class="panel panel-default ">
+                <!--<div class="panel-heading ">-->
+                <div class="columntitle">session.attributes
+                    <input type="button" class="testbutton" value="clear" onClick="clearattributes();">
+                    <input type="button" class="testbutton" value="test" onClick="test();">
+                </div>
+                <!--</div>-->
+                <div class="panel-info ">
+                    <div id="eventreport" class="eventreportclass"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-5" id="mainpanel">
+            <!--<div class="columntitle">Main Panel Header</div>-->
+            <div class="panel panel-default ">
+                <div id="nav">
+                    <input type="button" value="MA" onClick="filterState('Massachusetts');">
+                    <input type="button" value="NY" onClick="filterState('New York');">
+                    <input type="button" value="NC" onClick="filterState('North Carolina');">
+                    <input type="button" value="FL" onClick="filterState('Florida');">
+                </div>
+                <div id="vizContainer"></div>
+            </div>
+        </div>
+        <div class="col-sm-4" id="chatpanel">
+            <div class="panel panel-default ">
+                <div class="columntitle">Interactions &nbsp;&nbsp;
+                    <input type="button" class="testbutton" value="clear" onClick="clearchat();">
+                    <input type="button" class="testbutton" value="test me" onClick="addchat('hello!', 'bubble me');">&nbsp;
+                    <input type="button" class="testbutton" value="test you" onClick="addchat('how you doin?', 'bubble you');">
+                </div>
+                <div class="panel-info ">
+                    <div id="chatbox" class="chat">
+                        <!--<div class="bubble me">Hello there!</div>-->
+                        <!--<div class="bubble you">Hi. I'm an expandeable chat box with box shadow. How are you? I expand horizontally and vertically, as you can see here.</div>-->
+                        <!--<div class="bubble me">Awesome.</div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="navbar navbar-default navbar-fixed-bottom">
+            <div class="container">
+                <p class="navbar-text pull-left">
+                    <table class="table1">
+                        <tr>
+                            <td class="tdlabel">Status</td>
+                            <td class="tdvalue"><span id="MQTTstatus">STOPPED</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tdlabel">Identity Pool ID</td>
+                            <td class="tdvaluesmall"><span id="IdentityPoolId"></span></td>
+                        </tr>
+                    </table>
+                </p>
+                <p class="navbar-text pull-right">
+                    <table class="table1">
+                        <tr>
+                            <td class="tdlabel">Subscribe Topic</td>
+                            <td class="tdvaluesmall"><span id="SubscribeTopic"></span></td>
+                        </tr>
+                        <tr>
+                            <td class="tdlabel">MQTT Endpoint</td>
+                            <td class="tdvaluesmall"><span id="mqttEndpoint"></span></td>
+                        </tr>
+                    </table>
+                </p>
+            </div>
+        </div>
+    </div>
+    <pre id='coordinates' class='ui-coordinates'></pre>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.js'></script>
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.css' type='text/css' />
+    <style>
+    #geocoder-container > div {
+        min-width: 50%;
+        margin-left: 25%;
+    }
+    </style>
+    <div id='map'"> <a href="" class='mapbox-maplogo' target="_blank">Mapbox</a>
+    </div>
+    <div class="popup" id="safetyindex">
+        <p>The safety score for this location is:</p>
+        <p>.45</p>
+        <p></p>
+        <a href="#" onclick="hide('safetyindex')">Close</a>
+    </div>
+    <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoicHVibHUiLCJhIjoiY2l4bnVtNGY3MDQ0dDMzcnpqYW9xZnR3ZSJ9.tti5nU0SmeqBFS-7HjZ_DA';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v9',
+        center: [-103.59179687498357, 40.66995747013945],
+        zoom: 13
+    });
+
+    map.addControl(new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken
+    }));
+    map.addControl(new mapboxgl.GeolocateControl());
+    map.addControl(new mapboxgl.NavigationControl());
+    var theLayers = [];
+    map.on('load', function() {
+
+        // Add a new source from our GeoJSON data and set the
+        // 'cluster' option to true.
+
+        map.addSource(String("warrants"), {
+            type: "geojson",
+            // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
+            // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
+            data: "http://localhost:8000/t2gy-r4x8.geojson",
+            cluster: true,
+            clusterMaxZoom: 20, // Max zoom to cluster points on
+            clusterRadius: 20 // Use small cluster radius for the heatmap look
+        });
+
+
+        // Use the earthquakes source to create four layers:
+        // three for each cluster category, and one for unclustered points
+
+        // Each point range gets a different fill color.
+        var layers = [
+            [10, 'orange'],
+            [20, 'red'],
+            [500, 'purple']
+        ];
+
+        layers.forEach(function(layer, i) {
+            theLayers.push("cluster-" + i);
+            map.addLayer({
+                "id": "cluster-" + i,
+                "type": "circle",
+                "source": "warrants",
+                "paint": {
+                    "circle-color": layer[1],
+                    "circle-radius": 70,
+                    "circle-blur": 1 // blur the circles to get a heatmap look
+                },
+                "filter": i === layers.length - 1 ? [">=", "point_count", layer[0]] : ["all", [">=", "point_count", layer[0]],
+                    ["<", "point_count", layers[i + 1][0]]
+                ]
+            }, 'waterway-label');
+        });
+
+        map.addLayer({
+            "id": "unclustered-points",
+            "type": "circle",
+            "source": "warrants",
+            "paint": {
+                "circle-color": 'rgba(0,255,0,0.5)',
+                "circle-radius": 20,
+                "circle-blur": 1
+            },
+            "filter": ["!=", "cluster", true]
+        }, 'waterway-label');
+    });
+
+    map["dragPan"].enable();
+    map["scrollZoom"].enable();
+
+    function flying(lat, long) {
+        map.flyTo({
+            center: [lat,long]
+        });
+    }
+    var show = function(id) {
+        $("#"+id).style.display = 'block';
+    }
+    var hide = function(id) {
+        $("#"+id).style.display = 'none';
+    }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.30.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
+    
+    .mapbox-maplogo {
+        position: absolute;
+        display: block;
+        height: 20px;
+        width: 100px;
+        left: 10px;
+        bottom: 10px;
+        text-indent: -9999px;
+        z-index: 99999;
+        overflow: hidden;
+        background-image: url('/logo.png');
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: 100px 20px;
+    }
+    
+    .popup {
+        display: none;
+        position: fixed;
+        padding: 0px;
+        width: 280px;
+        left: 50%;
+        margin-left: -150px;
+        height: 180px;
+        top: 50%;
+        margin-top: -100px;
+        background: #FFF;
+        z-index: 20;
+    }
+    
+    #popup1 {
+        -webkit-box-shadow: 0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+        box-shadow: 0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+    }
+    
+    #popup2:after {
+        position: fixed;
+        content: "";
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -2;
+    }
+    
+    #popup2:before {
+        position: absolute;
+        content: "";
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: #FFF;
+        z-index: -1;
+    }
+    /* From here on, just aesthetics */
+    
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 120%;
+    }
+    
+    a,
+    a:visited {
+        text-decoration: none;
+        color: #FFF;
+        font-weight: bold;
+        display: block;
+    }
+    
+    a:hover,
+    a:active {
+        text-decoration: underline;
+    }
+    
+    .popup a,
+    .popup a:visited {
+        color: #1abc9c;
+    }
+    
+    p {
+        margin: 1em 0;
+    }
+    
+    p+p+p {
+        font-size: 60%;
+    }
+    pre.ui-coordinates {
+  background:rgba(0,0,0,0.5);
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  padding:5px 10px;
+  color:#fff;
+  font-size:11px;
+  line-height:18px;
+  border-radius:3px;
+  max-height:240px;
+  overflow:auto;
+  width:100px;
+  }
+    </style>
+</head>
+
+<body>
+
+    <body>
+    <pre id='coordinates' class='ui-coordinates'></pre>
+
+        <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.js'></script>
+        <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.css' type='text/css' />
+        <style>
+        #geocoder-container > div {
+            min-width: 50%;
+            margin-left: 25%;
+        }
+        </style>
+        <div id='map'> <a href="" class='mapbox-maplogo' target="_blank">Mapbox</a>
+        </div>
+        <div class="popup" id="safetyindex">
+            <p>The safety score for this location is:</p>
+            <p>69</p>
+            <p></p>
+            <a href="#" onclick="hide('safetyindex')">Close</a>
+        </div>
+        <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoicHVibHUiLCJhIjoiY2l4bnVtNGY3MDQ0dDMzcnpqYW9xZnR3ZSJ9.tti5nU0SmeqBFS-7HjZ_DA';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/dark-v9',
+            center: [-103.59179687498357, 40.66995747013945],
+            zoom: 3
+        });
+
+        map.addControl(new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken
+        }));
+        map.addControl(new mapboxgl.GeolocateControl());
+        map.addControl(new mapboxgl.NavigationControl());
+
+        map.on('load', function() {
+
+            // Add a new source from our GeoJSON data and set the
+            // 'cluster' option to true.
+
+            map.addSource(String("warrants"), {
+                type: "geojson",
+                // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
+                // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
+                data: "http://localhost:8000/t2gy-r4x8.geojson",
+                cluster: true,
+                clusterMaxZoom: 20, // Max zoom to cluster points on
+                clusterRadius: 20 // Use small cluster radius for the heatmap look
+            });
+
+
+            // Use the earthquakes source to create four layers:
+            // three for each cluster category, and one for unclustered points
+
+            // Each point range gets a different fill color.
+            var layers = [
+                [0, 'green'],
+                [20, 'orange'],
+                [200, 'red']
+            ];
+
+            layers.forEach(function(layer, i) {
+                map.addLayer({
+                    "id": "cluster-" + i,
+                    "type": "circle",
+                    "source": "warrants",
+                    "paint": {
+                        "circle-color": layer[1],
+                        "circle-radius": 70,
+                        "circle-blur": 1 // blur the circles to get a heatmap look
+                    },
+                    "filter": i === layers.length - 1 ? [">=", "point_count", layer[0]] : ["all", [">=", "point_count", layer[0]],
+                        ["<", "point_count", layers[i + 1][0]]
+                    ]
+                }, 'waterway-label');
+            });
+
+            map.addLayer({
+                "id": "unclustered-points",
+                "type": "circle",
+                "source": "warrants",
+                "paint": {
+                    "circle-color": 'rgba(0,255,0,0.5)',
+                    "circle-radius": 20,
+                    "circle-blur": 1
+                },
+                "filter": ["!=", "cluster", true]
+            }, 'waterway-label');
+        });
+
+        map["dragPan"].enable();
+        map["scrollZoom"].enable();
+        $ = function(id) {
+            return document.getElementById(id);
+        }
+
+        var show = function(id) {
+            $(id).style.display = 'block';
+        }
+        var hide = function(id) {
+            $(id).style.display = 'none';
+        }
+
+        </script>
+    </body>
+
+</html>

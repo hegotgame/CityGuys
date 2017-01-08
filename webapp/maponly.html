@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau Embed Map with Javascript</title>
+    <!--<script type="text/javascript" src="https://online.tableau.com/javascripts/api/tableau-2.js"></script>-->
+    <script type="text/javascript"
+            src="https://public.tableau.com/javascripts/api/tableau-2.js"></script>
+
+    <script type="text/javascript" src="js/tableauEmbed.js"></script>
+
+</head>
+<body onload="initViz();">
+
+<input type="button" value="MA" onClick="filterState('Massachusetts');" >
+<input type="button" value="NY" onClick="filterState('New York');" >
+<input type="button" value="NC" onClick="filterState('North Carolina');" >
+<input type="button" value="FL" onClick="filterState('Florida');" >
+
+<div id="vizContainer" ></div>
+
+
+</body>
+</html>
